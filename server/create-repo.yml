@@ -1,0 +1,24 @@
+---
+- name: Устанавливаем необходимые пакеты
+  become: true
+  yum:
+    name: createrepo
+    state: present
+
+- name: Создаём структуру каталогов для репозитория
+  become: true
+  file:
+    path: "{{ NGINX_MYREPO_PATH }}"
+    state: directory
+    mode: 0755
+
+- name: Проверяем на существование репозитория
+  become: true
+  stat:
+    path: "{{ NGINX_MYREPO_PATH }}/repodata"
+  register: myrepo
+
+- name: Создаём репозиторий
+  become: true
+  shell: "createrepo {{ NGINX_MYREPO_PATH }}"
+  when: myrepo.stat.isdir is not defined or not myrepo.stat.isdir

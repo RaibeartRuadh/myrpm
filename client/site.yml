@@ -1,0 +1,19 @@
+---
+- hosts: all
+  become: true
+     # Установка mc
+  tasks:
+  - name: install ms
+    yum:
+      name: mc
+
+
+- name: Прописываем наш репозиторий Клиенту
+  hosts: all
+  tasks:
+    - name: define the repository
+      become: true
+      template:
+        src: RaibeartRepos.repo.j2
+        dest: /etc/yum.repos.d/RaibeartRepos.repo
+        mode: 0644

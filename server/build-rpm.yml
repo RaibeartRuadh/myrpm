@@ -1,0 +1,32 @@
+---
+
+# Вариант 1
+- name: Создаем директории для сборки rpm
+  file:
+    path: "rpmbuild/{{ item }}"
+    state: directory
+  loop:
+    - SOURCES
+    - SPECS
+    - BUILD
+    - BUILDROOT
+    - SRPMS
+    - RPMS
+
+# Вариант 2
+#- name: Создаем директории для сборки rpm
+#    command: mkdir -p ~/rpmbuild/{RPMS,SRPMS,SPECS,SOURCES,BUILD} 
+
+# Вариант 3
+# - name: Создаем директории для сборки rpm
+#    command: rpmdev-setuptree  
+
+- name: Копируем файл спецификации пакета диструбитива rpm
+  copy:
+    src: consul.spec
+    dest: ~/rpmbuild/SPECS/consul.spec
+  register: spec_file
+
+- name: Сборка rpm-пакета rpmbuild
+  shell: rpmbuild -bb ~/rpmbuild/SPECS/consul.spec
+  when: spec_file.changed

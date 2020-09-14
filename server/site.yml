@@ -1,0 +1,61 @@
+---
+- hosts: all
+  become: true
+  tasks:
+
+  - name: Install rpm-build
+    yum:
+      name: rpm-build
+
+  - name: Install epel-release
+    yum:
+      name: epel-release
+      state: latest
+
+  - name: Install nginx
+    package:
+      name: nginx
+      state: present
+
+  - name: Start nginx
+    command: service nginx restart
+
+  - name: Install rpmdevtools
+    yum:
+      name: rpmdevtools
+  - name: Install gcc
+    yum:
+      name: gcc
+  - name: Install make
+    yum:
+      name: make
+  - name: Install automake
+    yum:
+      name: automake
+  - name: Install yum-utils
+    yum:
+      name: yum-utils
+
+- name: Подготовка пакета с Consul-ом
+  hosts: all
+  vars:
+    MYREPO_PATH: "{{ REPO_NAME }}/{{ ansible_distribution | lower }}/{{ ansible_distribution_version.split('.') | first }}/{{ ansible_architecture }}"
+    NGINX_MYREPO_PATH: "/usr/share/nginx/html/{{ MYREPO_PATH }}"
+
+  tasks:
+    - import_tasks: build-rpm.yml
+    - import_tasks: create-repo.yml
+    - name: Копируем наш пакет в репозиторий
+      become: true
+      copy:
+        src: "rpmbuild/RPMS/{{ ansible_architecture }}/consul-1.7.0-1.{{ ansible_architecture }}.rpm"
+        dest: "{{ NGINX_MYREPO_PATH }}/consul-1.7.0-1.{{ ansible_architecture }}.rpm"
+        remote_src: true
+        mode: 0644
+      notify: update repo
+
+  handlers:
+    - name: update repo
+      become: true
+      shell: "createrepo --update {{ NGINX_MYREPO_PATH }}"
+
